@@ -1,0 +1,1176 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Skill System — Học Kỹ Năng AI</title>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,300;0,400;0,600;0,700;0,900;1,400;1,700&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0a0a0a;--bg2:#111111;--bg3:#181818;--surface:#1e1e1e;--surface2:#252525;--border:rgba(255,255,255,0.07);--border-active:rgba(255,215,0,0.3);--gold:#f0c040;--white:#f0ede6;--muted:#7a7a7a;--green:#4ade80;--blue:#60a5fa;--red:#f87171;--tag-bg:rgba(240,192,64,0.08);}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--white);font-family:'Be Vietnam Pro',sans-serif;min-height:100vh;overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");pointer-events:none;z-index:0;opacity:.4;}
+
+/* LAYOUT */
+.app{display:grid;grid-template-columns:260px 1fr;min-height:100vh;position:relative;z-index:1;}
+
+/* SIDEBAR */
+.sidebar{background:var(--bg2);border-right:1px solid var(--border);position:sticky;top:0;height:100vh;overflow-y:auto;display:flex;flex-direction:column;}
+.sidebar-logo{padding:24px 24px 18px;border-bottom:1px solid var(--border);}
+.logo-label{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.2em;color:var(--muted);text-transform:uppercase;margin-bottom:5px;}
+.logo-title{font-size:17px;font-weight:900;color:var(--white);line-height:1.15;}
+.logo-title span{color:var(--gold);}
+.sidebar-tabs{display:flex;border-bottom:1px solid var(--border);}
+.sidebar-tab{flex:1;padding:9px;font-size:10px;font-weight:700;text-align:center;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;transition:all .18s;letter-spacing:.05em;text-transform:uppercase;font-family:'Space Mono',monospace;}
+.sidebar-tab:hover{color:var(--white);}
+.sidebar-tab.active{color:var(--gold);border-bottom-color:var(--gold);}
+.sidebar-panel{display:none;flex-direction:column;flex:1;}
+.sidebar-panel.active{display:flex;}
+.sidebar-section-label{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.18em;color:var(--muted);text-transform:uppercase;padding:14px 16px 5px;}
+.skill-nav-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;cursor:pointer;transition:all .18s;border:1px solid transparent;margin:0 8px 2px;text-decoration:none;color:var(--white);}
+.skill-nav-item:hover{background:var(--surface);border-color:var(--border);}
+.skill-nav-icon{width:30px;height:30px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;}
+.skill-nav-info{flex:1;min-width:0;}
+.skill-nav-name{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.skill-nav-meta{font-size:10px;color:var(--muted);margin-top:1px;}
+.skill-nav-badge{font-family:'Space Mono',monospace;font-size:9px;padding:2px 6px;border-radius:4px;background:var(--surface2);color:var(--muted);flex-shrink:0;}
+.skill-nav-badge.done{background:rgba(74,222,128,.1);color:var(--green);}
+.sidebar-progress{margin-top:auto;padding:16px 20px;border-top:1px solid var(--border);}
+.progress-label{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:7px;}
+.progress-label strong{color:var(--white);}
+.progress-bar{height:3px;background:var(--surface2);border-radius:99px;overflow:hidden;}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--gold),#e8a020);border-radius:99px;transition:width .5s;}
+
+/* ADMIN SIDEBAR */
+.admin-lock-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;text-align:center;flex:1;}
+.admin-lock-icon{font-size:28px;margin-bottom:14px;opacity:.45;}
+.admin-lock-title{font-size:14px;font-weight:700;margin-bottom:6px;}
+.admin-lock-desc{font-size:12px;color:var(--muted);margin-bottom:18px;line-height:1.6;}
+.admin-pw-input{width:100%;padding:9px 12px;background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--white);font-family:'Space Mono',monospace;font-size:13px;text-align:center;letter-spacing:.2em;margin-bottom:10px;outline:none;transition:border-color .18s;}
+.admin-pw-input:focus{border-color:var(--gold);}
+.admin-pw-input.error{border-color:var(--red);animation:shake .3s;}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.admin-sidebar-content{padding:14px;flex:1;overflow-y:auto;}
+.admin-skill-list{display:flex;flex-direction:column;gap:5px;margin-bottom:12px;}
+.admin-skill-row{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 10px;cursor:pointer;transition:all .15s;}
+.admin-skill-row:hover{border-color:rgba(255,255,255,.15);}
+.admin-skill-row-icon{font-size:15px;flex-shrink:0;}
+.admin-skill-row-name{font-size:12px;font-weight:600;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.admin-skill-row-actions{display:flex;gap:4px;flex-shrink:0;}
+.admin-icon-btn{width:24px;height:24px;border-radius:5px;display:flex;align-items:center;justify-content:center;background:transparent;border:1px solid var(--border);color:var(--muted);cursor:pointer;font-size:11px;transition:all .15s;}
+.admin-icon-btn:hover{background:var(--surface2);color:var(--white);border-color:rgba(255,255,255,.2);}
+.admin-icon-btn.delete:hover{background:rgba(248,113,113,.1);color:var(--red);border-color:var(--red);}
+.admin-new-btn{width:100%;padding:9px;border-radius:8px;background:var(--tag-bg);border:1px dashed var(--border-active);color:var(--gold);font-size:12px;font-weight:700;cursor:pointer;transition:all .18s;letter-spacing:.05em;}
+.admin-new-btn:hover{background:rgba(240,192,64,.12);}
+
+/* MAIN */
+.main{display:flex;flex-direction:column;min-height:100vh;}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:16px 36px;border-bottom:1px solid var(--border);position:sticky;top:0;background:rgba(10,10,10,.92);backdrop-filter:blur(12px);z-index:10;}
+.topbar-breadcrumb{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);}
+.topbar-breadcrumb .current{color:var(--white);font-weight:600;}
+.topbar-actions{display:flex;align-items:center;gap:10px;}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 15px;border-radius:8px;font-family:'Be Vietnam Pro',sans-serif;font-size:13px;font-weight:600;cursor:pointer;border:none;transition:all .18s;text-decoration:none;}
+.btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--border);}
+.btn-ghost:hover{border-color:rgba(255,255,255,.2);color:var(--white);}
+.btn-gold{background:var(--gold);color:#0a0a0a;}
+.btn-gold:hover{background:#f5cc55;transform:translateY(-1px);}
+.btn-red{background:rgba(248,113,113,.15);color:var(--red);border:1px solid rgba(248,113,113,.3);}
+.btn-red:hover{background:rgba(248,113,113,.25);}
+
+/* HERO */
+.hero{padding:48px 36px 40px;border-bottom:1px solid var(--border);position:relative;overflow:hidden;}
+.hero::after{content:'';position:absolute;top:-80px;right:-80px;width:360px;height:360px;background:radial-gradient(circle,rgba(240,192,64,.06) 0%,transparent 70%);pointer-events:none;}
+.hero-eyebrow{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);margin-bottom:14px;display:flex;align-items:center;gap:10px;}
+.hero-eyebrow::before{content:'';display:inline-block;width:20px;height:1px;background:var(--gold);}
+.hero-title{font-size:clamp(28px,3.5vw,46px);font-weight:900;line-height:1.1;letter-spacing:-.02em;margin-bottom:10px;}
+.hero-title .accent{color:var(--gold);font-style:italic;}
+.hero-sub{font-size:14px;color:var(--muted);max-width:560px;line-height:1.7;margin-bottom:28px;}
+.hero-compare{display:grid;grid-template-columns:1fr 1fr;gap:10px;max-width:720px;}
+.compare-card{padding:18px 20px;border-radius:12px;border:1px solid var(--border);background:var(--surface);}
+.compare-card.highlight{border-color:var(--border-active);background:rgba(240,192,64,.04);}
+.compare-tag{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;}
+.compare-card.highlight .compare-tag{color:var(--gold);}
+.compare-text{font-size:13px;line-height:1.65;color:rgba(240,237,230,.75);}
+.flow-line{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.1em;color:var(--muted);margin-top:24px;display:flex;align-items:center;gap:7px;flex-wrap:wrap;}
+.flow-step{color:var(--gold);font-weight:700;}
+
+/* CONTENT */
+.content{padding:32px 36px;flex:1;}
+.tags-filter{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:24px;}
+.tag-pill{padding:5px 13px;border-radius:99px;border:1px solid var(--border);font-size:12px;font-weight:600;color:var(--muted);cursor:pointer;transition:all .15s;background:transparent;}
+.tag-pill:hover{border-color:rgba(255,255,255,.2);color:var(--white);}
+.tag-pill.active{background:var(--gold);color:#0a0a0a;border-color:var(--gold);}
+.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;}
+.section-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;}
+.section-count{font-family:'Space Mono',monospace;font-size:11px;color:var(--muted);}
+.skills-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;margin-bottom:40px;}
+
+/* SKILL CARD */
+.skill-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:22px;cursor:pointer;transition:all .22s;position:relative;overflow:hidden;animation:fadeUp .4s both;}
+.skill-card::before{content:'';position:absolute;inset:0;opacity:0;background:radial-gradient(circle at var(--mx,50%) var(--my,50%),rgba(240,192,64,.06),transparent 60%);transition:opacity .3s;pointer-events:none;}
+.skill-card:hover::before{opacity:1;}
+.skill-card:hover{border-color:rgba(240,192,64,.2);transform:translateY(-2px);box-shadow:0 8px 32px rgba(0,0,0,.4);}
+.skill-card.locked{opacity:.5;cursor:not-allowed;}
+.skill-card.locked:hover{transform:none;border-color:var(--border);}
+.card-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px;}
+.card-icon{width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:19px;flex-shrink:0;}
+.card-badges{display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end;}
+.badge{font-family:'Space Mono',monospace;font-size:9px;padding:2px 6px;border-radius:4px;letter-spacing:.05em;}
+.badge-new{background:rgba(96,165,250,.15);color:var(--blue);}
+.badge-hot{background:rgba(248,113,113,.15);color:var(--red);}
+.badge-done{background:rgba(74,222,128,.12);color:var(--green);}
+.badge-free{background:rgba(240,192,64,.12);color:var(--gold);}
+.card-title{font-size:16px;font-weight:700;margin-bottom:5px;line-height:1.3;}
+.card-desc{font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:16px;}
+.card-steps{display:flex;flex-direction:column;gap:5px;margin-bottom:16px;}
+.step-item{display:flex;align-items:center;gap:7px;font-size:11px;color:rgba(240,237,230,.6);}
+.step-dot{width:5px;height:5px;border-radius:50%;background:var(--surface2);flex-shrink:0;border:1px solid var(--border);}
+.step-dot.done{background:var(--green);border-color:var(--green);}
+.step-dot.active{background:var(--gold);border-color:var(--gold);}
+.step-item.done-step{color:rgba(240,237,230,.3);text-decoration:line-through;}
+.card-footer{display:flex;align-items:center;justify-content:space-between;padding-top:14px;border-top:1px solid var(--border);}
+.card-meta{display:flex;align-items:center;gap:12px;font-size:10px;color:var(--muted);font-family:'Space Mono',monospace;}
+.card-cta{font-size:12px;font-weight:700;color:var(--gold);display:flex;align-items:center;gap:4px;transition:gap .18s;}
+.skill-card:hover .card-cta{gap:8px;}
+.card-progress{height:3px;background:var(--surface2);border-radius:99px;overflow:hidden;margin-bottom:14px;}
+.card-progress-fill{height:100%;background:linear-gradient(90deg,var(--gold),#e8a020);border-radius:99px;}
+
+/* ══ LESSON VIEW (full-screen learning mode) ══ */
+.lesson-overlay{position:fixed;inset:0;background:var(--bg);z-index:150;display:flex;flex-direction:column;opacity:0;pointer-events:none;transition:opacity .25s;}
+.lesson-overlay.open{opacity:1;pointer-events:all;}
+.lesson-topbar{display:flex;align-items:center;gap:14px;padding:14px 28px;border-bottom:1px solid var(--border);background:rgba(10,10,10,.95);backdrop-filter:blur(10px);flex-shrink:0;}
+.lesson-topbar-back{display:flex;align-items:center;gap:7px;font-size:13px;font-weight:700;color:var(--muted);cursor:pointer;transition:color .15s;background:transparent;border:none;padding:6px 10px;border-radius:7px;}
+.lesson-topbar-back:hover{color:var(--white);background:var(--surface);}
+.lesson-topbar-title{font-size:15px;font-weight:700;flex:1;}
+.lesson-topbar-progress{display:flex;align-items:center;gap:10px;flex-shrink:0;}
+.lesson-progress-bar{width:120px;height:4px;background:var(--surface2);border-radius:99px;overflow:hidden;}
+.lesson-progress-fill{height:100%;background:linear-gradient(90deg,var(--gold),#e8a020);border-radius:99px;transition:width .4s;}
+.lesson-progress-text{font-family:'Space Mono',monospace;font-size:10px;color:var(--muted);white-space:nowrap;}
+
+.lesson-body{display:flex;flex:1;overflow:hidden;}
+
+/* Step list panel */
+.lesson-steps-panel{width:280px;border-right:1px solid var(--border);overflow-y:auto;flex-shrink:0;background:var(--bg2);display:flex;flex-direction:column;}
+.lesson-steps-header{padding:16px 18px 10px;font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--border);}
+.lesson-step-item{display:flex;align-items:flex-start;gap:10px;padding:11px 16px;cursor:pointer;transition:background .15s;border-left:2px solid transparent;position:relative;}
+.lesson-step-item:hover{background:rgba(255,255,255,.03);}
+.lesson-step-item.active{background:var(--tag-bg);border-left-color:var(--gold);}
+.lesson-step-item.completed{opacity:.6;}
+.lesson-step-item.completed:hover{opacity:1;}
+.lesson-step-num{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Space Mono',monospace;font-size:10px;background:var(--surface);border:1px solid var(--border);flex-shrink:0;margin-top:1px;transition:all .2s;}
+.lesson-step-item.active .lesson-step-num{background:var(--gold);border-color:var(--gold);color:#0a0a0a;font-weight:700;}
+.lesson-step-item.completed .lesson-step-num{background:rgba(74,222,128,.15);border-color:rgba(74,222,128,.4);color:var(--green);}
+.lesson-step-info{flex:1;min-width:0;}
+.lesson-step-name{font-size:12px;font-weight:600;line-height:1.4;}
+.lesson-step-status{font-size:10px;color:var(--muted);margin-top:2px;font-family:'Space Mono',monospace;}
+
+/* Content panel */
+.lesson-content-panel{flex:1;overflow-y:auto;display:flex;flex-direction:column;}
+.lesson-content-inner{max-width:720px;margin:0 auto;padding:36px 40px;flex:1;}
+.lesson-content-eyebrow{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin-bottom:10px;}
+.lesson-content-title{font-size:26px;font-weight:900;margin-bottom:16px;line-height:1.2;}
+.lesson-content-body{font-size:14px;line-height:1.8;color:rgba(240,237,230,.85);}
+.lesson-content-body p{margin-bottom:14px;}
+.lesson-content-body h3{font-size:16px;font-weight:700;margin:24px 0 10px;color:var(--white);}
+.lesson-content-body h4{font-size:14px;font-weight:700;margin:18px 0 8px;color:var(--gold);}
+.lesson-content-body ul,
+.lesson-content-body ol{padding-left:20px;margin-bottom:14px;}
+.lesson-content-body li{margin-bottom:6px;}
+.lesson-content-body strong{color:var(--white);font-weight:700;}
+.lesson-content-body code{background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:2px 7px;font-family:'Space Mono',monospace;font-size:12px;color:var(--gold);}
+.lesson-content-body pre{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px;margin:14px 0;overflow-x:auto;}
+.lesson-content-body pre code{background:none;border:none;padding:0;font-size:12px;color:rgba(240,237,230,.8);}
+.lesson-callout{background:rgba(240,192,64,.06);border:1px solid rgba(240,192,64,.2);border-radius:10px;padding:14px 16px;margin:16px 0;display:flex;gap:10px;}
+.lesson-callout-icon{font-size:16px;flex-shrink:0;margin-top:1px;}
+.lesson-callout-text{font-size:13px;line-height:1.6;}
+.lesson-callout.tip{background:rgba(96,165,250,.06);border-color:rgba(96,165,250,.2);}
+.lesson-callout.tip .lesson-callout-icon::before{content:'💡';}
+.lesson-callout.warning{background:rgba(248,113,113,.06);border-color:rgba(248,113,113,.2);}
+.lesson-content-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;padding:60px 40px;text-align:center;color:var(--muted);}
+.lesson-content-empty-icon{font-size:40px;margin-bottom:16px;opacity:.4;}
+.lesson-content-empty-title{font-size:16px;font-weight:700;margin-bottom:8px;color:var(--white);}
+.lesson-content-empty-desc{font-size:13px;line-height:1.6;}
+.lesson-nav-bar{padding:18px 40px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:12px;flex-shrink:0;background:rgba(10,10,10,.6);}
+.lesson-nav-step-info{font-size:12px;color:var(--muted);}
+
+/* SKILL DETAIL MODAL (card click → overview) */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(6px);z-index:100;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .25s;}
+.modal-overlay.open{opacity:1;pointer-events:all;}
+.modal{background:var(--bg2);border:1px solid var(--border);border-radius:20px;width:100%;max-width:560px;max-height:88vh;overflow-y:auto;padding:32px;transform:translateY(20px);transition:transform .25s;position:relative;}
+.modal-overlay.open .modal{transform:translateY(0);}
+.modal-close{position:absolute;top:18px;right:18px;width:30px;height:30px;border-radius:8px;background:var(--surface);border:1px solid var(--border);color:var(--muted);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:15px;transition:all .15s;}
+.modal-close:hover{color:var(--white);}
+.modal-eyebrow{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.2em;color:var(--gold);text-transform:uppercase;margin-bottom:10px;}
+.modal-title{font-size:24px;font-weight:900;margin-bottom:8px;line-height:1.2;}
+.modal-desc{font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:22px;}
+.modal-steps-list{display:flex;flex-direction:column;gap:6px;margin-bottom:22px;}
+.modal-step-row{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:8px;background:var(--surface);border:1px solid var(--border);cursor:pointer;transition:all .15s;}
+.modal-step-row:hover{border-color:rgba(240,192,64,.3);background:var(--tag-bg);}
+.modal-step-row.done-row{opacity:.6;}
+.modal-step-row.active-row{border-color:var(--border-active);background:var(--tag-bg);}
+.modal-step-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.modal-step-dot.s-done{background:var(--green);}
+.modal-step-dot.s-active{background:var(--gold);}
+.modal-step-dot.s-todo{background:var(--surface2);border:1px solid var(--border);}
+.modal-step-name{font-size:13px;font-weight:600;flex:1;}
+.modal-step-hint{font-size:11px;color:var(--muted);}
+.modal-section-label{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;}
+.modal-actions{display:flex;gap:8px;padding-top:18px;border-top:1px solid var(--border);}
+
+/* ADMIN FORM MODAL */
+.admin-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.82);backdrop-filter:blur(8px);z-index:200;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .25s;}
+.admin-modal-overlay.open{opacity:1;pointer-events:all;}
+.admin-modal{background:var(--bg2);border:1px solid var(--border-active);border-radius:20px;width:100%;max-width:620px;max-height:90vh;overflow-y:auto;padding:28px;transform:translateY(20px);transition:transform .25s;position:relative;}
+.admin-modal-overlay.open .admin-modal{transform:translateY(0);}
+.admin-modal-header{display:flex;align-items:center;gap:12px;margin-bottom:22px;padding-bottom:18px;border-bottom:1px solid var(--border);}
+.admin-modal-title{font-size:19px;font-weight:900;flex:1;}
+.admin-modal-subtitle{font-size:11px;color:var(--gold);font-family:'Space Mono',monospace;letter-spacing:.1em;text-transform:uppercase;}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:13px;}
+.form-group{display:flex;flex-direction:column;gap:5px;}
+.form-group.full{grid-column:1/-1;}
+.form-label{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;font-family:'Space Mono',monospace;}
+.form-label span{color:var(--gold);margin-left:3px;}
+.form-input,.form-textarea,.form-select{background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--white);font-family:'Be Vietnam Pro',sans-serif;font-size:13px;padding:9px 12px;outline:none;transition:border-color .18s;width:100%;}
+.form-input:focus,.form-textarea:focus,.form-select:focus{border-color:var(--gold);}
+.form-textarea{min-height:70px;resize:vertical;line-height:1.5;}
+.form-select option{background:var(--bg2);}
+.form-hint{font-size:11px;color:var(--muted);margin-top:1px;line-height:1.4;}
+.icon-picker{display:flex;gap:5px;flex-wrap:wrap;}
+.icon-opt{width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:17px;cursor:pointer;border:1px solid var(--border);background:var(--surface);transition:all .15s;}
+.icon-opt:hover{border-color:rgba(255,255,255,.2);}
+.icon-opt.selected{border-color:var(--gold);background:var(--tag-bg);}
+.badges-row{display:flex;gap:7px;flex-wrap:wrap;}
+.badge-toggle{padding:4px 11px;border-radius:99px;border:1px solid var(--border);font-size:10px;font-weight:600;cursor:pointer;transition:all .15s;background:transparent;color:var(--muted);}
+.badge-toggle.active-new{background:rgba(96,165,250,.15);color:var(--blue);border-color:var(--blue);}
+.badge-toggle.active-hot{background:rgba(248,113,113,.15);color:var(--red);border-color:var(--red);}
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:9px 12px;background:var(--surface);border:1px solid var(--border);border-radius:8px;}
+.toggle-label{font-size:13px;}
+.toggle-switch{position:relative;width:38px;height:21px;}
+.toggle-switch input{opacity:0;width:0;height:0;}
+.toggle-slider{position:absolute;inset:0;background:var(--surface2);border-radius:99px;cursor:pointer;transition:.3s;border:1px solid var(--border);}
+.toggle-slider::before{content:'';position:absolute;width:15px;height:15px;left:2px;top:2px;background:var(--muted);border-radius:50%;transition:.3s;}
+.toggle-switch input:checked+.toggle-slider{background:rgba(240,192,64,.2);border-color:var(--gold);}
+.toggle-switch input:checked+.toggle-slider::before{background:var(--gold);transform:translateX(17px);}
+
+/* Step editor in admin form */
+.steps-editor{display:flex;flex-direction:column;gap:8px;}
+.step-editor-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;transition:border-color .15s;}
+.step-editor-card:focus-within{border-color:rgba(240,192,64,.35);}
+.step-editor-header{display:flex;align-items:center;gap:8px;padding:9px 12px;border-bottom:1px solid var(--border);background:var(--bg3);}
+.step-editor-num{font-family:'Space Mono',monospace;font-size:10px;color:var(--gold);width:18px;flex-shrink:0;}
+.step-editor-title-input{flex:1;background:transparent;border:none;color:var(--white);font-family:'Be Vietnam Pro',sans-serif;font-size:13px;font-weight:600;outline:none;}
+.step-editor-title-input::placeholder{color:var(--muted);}
+.step-editor-remove{background:transparent;border:none;color:var(--muted);cursor:pointer;font-size:14px;padding:2px 4px;border-radius:4px;transition:color .15s;flex-shrink:0;}
+.step-editor-remove:hover{color:var(--red);}
+.step-editor-body{padding:10px 12px;}
+.step-editor-detail{width:100%;background:transparent;border:none;color:rgba(240,237,230,.75);font-family:'Be Vietnam Pro',sans-serif;font-size:12px;outline:none;line-height:1.6;resize:none;min-height:60px;}
+.step-editor-detail::placeholder{color:var(--muted);}
+.step-add-btn{background:transparent;border:1px dashed var(--border);border-radius:8px;color:var(--muted);font-size:12px;padding:8px;cursor:pointer;transition:all .15s;text-align:center;width:100%;}
+.step-add-btn:hover{border-color:var(--gold);color:var(--gold);}
+.admin-modal-footer{display:flex;gap:9px;padding-top:18px;margin-top:18px;border-top:1px solid var(--border);}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;right:24px;z-index:999;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 18px;display:flex;align-items:center;gap:9px;font-size:13px;font-weight:600;transform:translateY(20px);opacity:0;transition:all .3s;pointer-events:none;}
+.toast.show{opacity:1;transform:translateY(0);}
+.toast.success{border-color:rgba(74,222,128,.3);}
+.toast.error{border-color:rgba(248,113,113,.3);}
+
+/* CONFIRM */
+.confirm-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:300;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s;}
+.confirm-overlay.open{opacity:1;pointer-events:all;}
+.confirm-box{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:26px;max-width:360px;width:100%;text-align:center;}
+.confirm-title{font-size:17px;font-weight:900;margin-bottom:7px;}
+.confirm-desc{font-size:13px;color:var(--muted);margin-bottom:22px;line-height:1.6;}
+.confirm-actions{display:flex;gap:9px;}
+
+/* IMPORT MODAL */
+.import-overlay{position:fixed;inset:0;background:rgba(0,0,0,.82);backdrop-filter:blur(8px);z-index:250;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .25s;}
+.import-overlay.open{opacity:1;pointer-events:all;}
+.import-box{background:var(--bg2);border:1px solid var(--border-active);border-radius:20px;padding:28px;max-width:520px;width:100%;}
+.import-title{font-size:19px;font-weight:900;margin-bottom:6px;}
+.import-desc{font-size:13px;color:var(--muted);margin-bottom:20px;line-height:1.6;}
+.import-textarea{width:100%;min-height:160px;background:var(--surface);border:1px solid var(--border);border-radius:10px;color:var(--white);font-family:'Space Mono',monospace;font-size:12px;padding:12px;outline:none;resize:vertical;line-height:1.6;}
+.import-textarea:focus{border-color:var(--gold);}
+.import-actions{display:flex;gap:9px;margin-top:14px;}
+.import-hint{font-size:11px;color:var(--muted);margin-top:10px;line-height:1.5;}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+.skill-card:nth-child(1){animation-delay:.05s}.skill-card:nth-child(2){animation-delay:.1s}.skill-card:nth-child(3){animation-delay:.15s}.skill-card:nth-child(4){animation-delay:.2s}.skill-card:nth-child(5){animation-delay:.25s}.skill-card:nth-child(6){animation-delay:.3s}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--surface2);border-radius:99px}::-webkit-scrollbar-thumb:hover{background:var(--muted)}
+@media(max-width:860px){.app{grid-template-columns:1fr}.sidebar{display:none}.hero{padding:32px 20px}.content{padding:24px 20px}.topbar{padding:14px 20px}.hero-compare{grid-template-columns:1fr}.skills-grid{grid-template-columns:1fr}.form-grid{grid-template-columns:1fr}.lesson-steps-panel{display:none}}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- ═══ SIDEBAR ═══ -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-label">AI Skill System</div>
+    <div class="logo-title">Học <span>Kỹ Năng</span><br>Theo Hệ Thống</div>
+  </div>
+  <div class="sidebar-tabs">
+    <div class="sidebar-tab active" id="tab-learn" onclick="switchTab('learn')">📚 Học</div>
+    <div class="sidebar-tab" id="tab-admin" onclick="switchTab('admin')">⚙️ Admin</div>
+  </div>
+
+  <!-- LEARN PANEL -->
+  <div class="sidebar-panel active" id="panel-learn">
+    <div id="sidebar-skills"></div>
+    <div class="sidebar-progress">
+      <div class="progress-label"><span>Tiến độ tổng</span><strong id="sidebar-progress-text">0 / 0</strong></div>
+      <div class="progress-bar"><div class="progress-fill" id="sidebar-progress-bar" style="width:0%"></div></div>
+    </div>
+  </div>
+
+  <!-- ADMIN PANEL -->
+  <div class="sidebar-panel" id="panel-admin">
+    <div class="admin-lock-screen" id="adminLockScreen">
+      <div class="admin-lock-icon">🔐</div>
+      <div class="admin-lock-title">Admin Panel</div>
+      <div class="admin-lock-desc">Nhập mật khẩu để quản lý nội dung bài học</div>
+      <input type="password" class="admin-pw-input" id="adminPwInput" placeholder="••••••••" onkeydown="if(event.key==='Enter')checkAdmin()">
+      <button class="btn btn-gold" style="width:100%" onclick="checkAdmin()">Đăng nhập</button>
+      <div style="margin-top:10px;font-size:11px;color:var(--muted)">Mặc định: <span style="font-family:'Space Mono',monospace;color:var(--gold)">admin123</span></div>
+    </div>
+    <div class="admin-sidebar-content" id="adminContent" style="display:none">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--gold);font-family:'Space Mono',monospace">Quản lý Skills</div>
+        <div style="display:flex;gap:5px">
+          <button class="admin-icon-btn" onclick="openImport()" title="Import từ Notion/JSON" style="font-size:13px;width:28px;height:28px">⬇</button>
+          <button class="admin-icon-btn" onclick="adminLogout()" title="Đăng xuất" style="font-size:13px;width:28px;height:28px">↩</button>
+        </div>
+      </div>
+      <div class="admin-skill-list" id="adminSkillList"></div>
+      <button class="admin-new-btn" onclick="openAdminForm()">+ Thêm bài học mới</button>
+      <div style="margin-top:12px;padding:10px;background:var(--surface);border-radius:8px;border:1px solid var(--border)">
+        <div style="font-size:9px;color:var(--muted);font-family:'Space Mono',monospace;text-transform:uppercase;letter-spacing:.1em;margin-bottom:7px">Đổi mật khẩu</div>
+        <div style="display:flex;gap:5px">
+          <input type="password" id="newPwInput" placeholder="Mật khẩu mới" class="form-input" style="font-size:12px;padding:6px 9px">
+          <button class="btn btn-ghost" style="font-size:11px;padding:6px 10px;flex-shrink:0" onclick="changePw()">Lưu</button>
+        </div>
+      </div>
+      <div style="margin-top:8px;padding:10px;background:var(--surface);border-radius:8px;border:1px solid rgba(248,113,113,.2)">
+        <div style="font-size:9px;color:var(--muted);font-family:'Space Mono',monospace;text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">⚠️ Reset nội dung</div>
+        <button class="btn btn-ghost" style="width:100%;font-size:11px;color:var(--red);border-color:rgba(248,113,113,.3)" onclick="resetToDefault()">🔄 Tải lại nội dung gốc</button>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<!-- ═══ MAIN ═══ -->
+<main class="main">
+  <header class="topbar">
+    <div class="topbar-breadcrumb">
+      <span>Tất cả Skills</span><span>›</span><span class="current">Thư viện</span>
+    </div>
+    <div class="topbar-actions">
+      <button class="btn btn-ghost" onclick="switchTab('admin');document.querySelector('.sidebar-tab[id=tab-admin]').click()">⚙️ Admin</button>
+      <button class="btn btn-gold" onclick="openAdminForm()">+ Thêm Skill</button>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="hero-eyebrow">Skill System</div>
+    <h1 class="hero-title">Khoảng cách không còn là<br><span class="accent">viết prompt hay hay dở</span></h1>
+    <p class="hero-sub">Skill không phải prompt. Là cách đóng gói chuyên môn thành quy trình có cấu trúc — Claude biết phải làm gì theo từng bước, nhất quán mỗi lần.</p>
+    <div class="hero-compare">
+      <div class="compare-card">
+        <div class="compare-tag">👤 Người dùng AI thường</div>
+        <p class="compare-text">Mỗi lần cần việc gì là gõ prompt lại từ đầu. Kết quả phụ thuộc vào hôm đó prompt có hay không.</p>
+      </div>
+      <div class="compare-card highlight">
+        <div class="compare-tag">⚡ Người có hệ thống AI</div>
+        <p class="compare-text">Đóng gói chuyên môn thành Skill một lần. Mỗi lần trigger là chạy đúng quy trình — không phụ thuộc vào việc hôm đó prompt có "hay" không.</p>
+      </div>
+    </div>
+    <div class="flow-line">
+      <span>Cách hoạt động:</span>
+      <span class="flow-step">CÂU HỎI</span><span>→</span><span class="flow-step">SKILL</span><span>→</span><span class="flow-step">REFERENCES</span><span>→</span><span class="flow-step">OUTPUT CHUẨN</span>
+    </div>
+  </section>
+
+  <div class="content">
+    <div class="tags-filter">
+      <button class="tag-pill active" onclick="filterSkills('all',this)">Tất cả</button>
+      <button class="tag-pill" onclick="filterSkills('writing',this)">✍️ Viết lách</button>
+      <button class="tag-pill" onclick="filterSkills('analysis',this)">📊 Phân tích</button>
+      <button class="tag-pill" onclick="filterSkills('coding',this)">💻 Lập trình</button>
+      <button class="tag-pill" onclick="filterSkills('strategy',this)">🎯 Chiến lược</button>
+      <button class="tag-pill" onclick="filterSkills('free',this)">🆓 Miễn phí</button>
+    </div>
+    <div class="section-header">
+      <div class="section-title">📌 Tất cả bài học</div>
+      <div class="section-count" id="count">0 skills</div>
+    </div>
+    <div class="skills-grid" id="skillsGrid"></div>
+  </div>
+</main>
+</div>
+
+<!-- ═══ LESSON VIEW ═══ -->
+<div class="lesson-overlay" id="lessonOverlay">
+  <div class="lesson-topbar">
+    <button class="lesson-topbar-back" onclick="closeLesson()">← Quay lại</button>
+    <div class="lesson-topbar-title" id="lessonTopTitle">—</div>
+    <div class="lesson-topbar-progress">
+      <div class="lesson-progress-bar"><div class="lesson-progress-fill" id="lessonProgressFill" style="width:0%"></div></div>
+      <div class="lesson-progress-text" id="lessonProgressText">0/0</div>
+    </div>
+    <button class="btn btn-ghost" style="font-size:12px;padding:5px 10px" onclick="openLessonAdmin()" id="lessonAdminBtn" title="Sửa nội dung bước này">✏️ Sửa</button>
+  </div>
+  <div class="lesson-body">
+    <div class="lesson-steps-panel">
+      <div class="lesson-steps-header">Các bước học</div>
+      <div id="lessonStepsList"></div>
+    </div>
+    <div class="lesson-content-panel" id="lessonContentPanel">
+      <div class="lesson-content-inner" id="lessonContentInner"></div>
+    </div>
+  </div>
+  <div class="lesson-nav-bar">
+    <div class="lesson-nav-step-info" id="lessonNavInfo"></div>
+    <div style="display:flex;gap:9px;align-items:center">
+      <button class="btn btn-ghost" id="lessonPrevBtn" onclick="lessonNav(-1)">← Trước</button>
+      <button class="btn btn-gold" id="lessonNextBtn" onclick="lessonMarkAndNext()">Hoàn thành & Tiếp →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SKILL OVERVIEW MODAL ═══ -->
+<div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div id="modalContent"></div>
+  </div>
+</div>
+
+<!-- ═══ ADMIN FORM MODAL ═══ -->
+<div class="admin-modal-overlay" id="adminModalOverlay" onclick="if(event.target===this)closeAdminForm()">
+  <div class="admin-modal">
+    <div class="admin-modal-header">
+      <div><div class="admin-modal-subtitle" id="formMode">THÊM MỚI</div><div class="admin-modal-title" id="formTitle">Bài học mới</div></div>
+      <button class="admin-icon-btn" onclick="closeAdminForm()" style="font-size:15px;width:30px;height:30px">✕</button>
+    </div>
+    <div class="form-grid">
+      <div class="form-group full">
+        <label class="form-label">Icon <span>*</span></label>
+        <div class="icon-picker" id="iconPicker"></div>
+        <div style="display:flex;gap:8px;margin-top:7px;align-items:center">
+          <input type="text" id="customIcon" class="form-input" style="width:70px;text-align:center;font-size:19px" placeholder="🎓" maxlength="2">
+          <span class="form-hint">Hoặc nhập emoji tùy chỉnh</span>
+        </div>
+      </div>
+      <div class="form-group full">
+        <label class="form-label">Tên bài học <span>*</span></label>
+        <input type="text" id="fTitle" class="form-input" placeholder="VD: Prompt Engineering Pro">
+      </div>
+      <div class="form-group full">
+        <label class="form-label">Mô tả ngắn <span>*</span></label>
+        <textarea id="fDesc" class="form-textarea" placeholder="1-2 câu mô tả bài học này dạy gì, học xong được gì..."></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Thời gian học</label>
+        <input type="text" id="fDuration" class="form-input" placeholder="VD: 45 phút">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Cấp độ</label>
+        <select id="fLevel" class="form-select">
+          <option value="Mới bắt đầu">Mới bắt đầu</option>
+          <option value="Cơ bản">Cơ bản</option>
+          <option value="Trung cấp">Trung cấp</option>
+          <option value="Nâng cao">Nâng cao</option>
+        </select>
+      </div>
+      <div class="form-group full">
+        <label class="form-label">Tags</label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer"><input type="checkbox" id="tag-writing" value="writing"> ✍️ Viết lách</label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer"><input type="checkbox" id="tag-analysis" value="analysis"> 📊 Phân tích</label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer"><input type="checkbox" id="tag-coding" value="coding"> 💻 Lập trình</label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer"><input type="checkbox" id="tag-strategy" value="strategy"> 🎯 Chiến lược</label>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Badge</label>
+        <div class="badges-row">
+          <button type="button" class="badge-toggle" id="badge-new" onclick="toggleBadge('new')">MỚI</button>
+          <button type="button" class="badge-toggle" id="badge-hot" onclick="toggleBadge('hot')">🔥 HOT</button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Truy cập</label>
+        <div class="toggle-row"><span class="toggle-label">Miễn phí</span><label class="toggle-switch"><input type="checkbox" id="fFree"><span class="toggle-slider"></span></label></div>
+      </div>
+      <div class="form-group full">
+        <label class="form-label">Các bước học <span>*</span></label>
+        <div class="steps-editor" id="stepsEditor"></div>
+        <button type="button" class="step-add-btn" onclick="addStep()" style="margin-top:7px">+ Thêm bước học</button>
+        <div class="form-hint" style="margin-top:5px">Mỗi bước có tên và nội dung chi tiết. Học viên học trực tiếp trên website.</div>
+      </div>
+    </div>
+    <div class="admin-modal-footer">
+      <button class="btn btn-gold" style="flex:1" onclick="saveSkill()">💾 Lưu bài học</button>
+      <button class="btn btn-ghost" onclick="closeAdminForm()">Hủy</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ IMPORT MODAL ═══ -->
+<div class="import-overlay" id="importOverlay" onclick="if(event.target===this)closeImport()">
+  <div class="import-box">
+    <div class="import-title">⬇ Import bài học từ Notion / JSON</div>
+    <div class="import-desc">Paste JSON data từ Notion hoặc tạo sẵn bằng Claude. Website sẽ tự thêm vào danh sách bài học.</div>
+    <textarea class="import-textarea" id="importText" placeholder='Paste JSON ở đây. Ví dụ format Claude tạo ra:
+{
+  "title": "Tên bài học",
+  "icon": "🧠",
+  "desc": "Mô tả bài học",
+  "level": "Cơ bản",
+  "duration": "45 phút",
+  "tags": ["strategy"],
+  "free": true,
+  "steps": [
+    {"title": "Bước 1", "detail": "Nội dung chi tiết..."},
+    {"title": "Bước 2", "detail": "Nội dung chi tiết..."}
+  ]
+}'></textarea>
+    <div class="import-hint">💡 Prompt cho Claude: <em>"Tạo JSON theo format trên cho bài học về [chủ đề], với [số] bước, mỗi bước có nội dung chi tiết 2-3 đoạn."</em></div>
+    <div class="import-actions">
+      <button class="btn btn-gold" style="flex:1" onclick="importSkill()">✓ Import bài học</button>
+      <button class="btn btn-ghost" onclick="closeImport()">Hủy</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ CONFIRM ═══ -->
+<div class="confirm-overlay" id="confirmOverlay">
+  <div class="confirm-box">
+    <div class="confirm-title">Xóa bài học?</div>
+    <div class="confirm-desc" id="confirmDesc">Thao tác này không thể hoàn tác.</div>
+    <div class="confirm-actions">
+      <button class="btn btn-red" style="flex:1" id="confirmYes">Xóa</button>
+      <button class="btn btn-ghost" style="flex:1" onclick="closeConfirm()">Hủy</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ TOAST ═══ -->
+<div class="toast" id="toast"><span id="toastIcon"></span><span id="toastMsg"></span></div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+// DEFAULT DATA — Skill System Cơ Bản với nội dung đầy đủ
+// ═══════════════════════════════════════════════════════
+const DEFAULT_SKILLS = [
+{
+  id:1, icon:'🧠', iconBg:'rgba(96,165,250,0.12)',
+  title:'Skill System Cơ Bản',
+  desc:'Học cách đóng gói chuyên môn thành Skill có cấu trúc để Claude luôn cho ra output chuẩn mà không cần prompt hay.',
+  tags:['strategy'], badges:['new'], progress:50, free:true,
+  duration:'45 phút', level:'Cơ bản',
+  steps:[
+    {
+      title:'Hiểu Skill là gì', done:true,
+      detail:`<h3>Skill ≠ Prompt</h3>
+<p>Hầu hết mọi người dùng AI theo kiểu: <strong>nghĩ ra prompt → gõ vào → nhận kết quả → lần sau lại nghĩ lại từ đầu.</strong> Chất lượng output phụ thuộc vào hôm đó bạn viết prompt hay hay không.</p>
+<p>Skill là cách khác hoàn toàn. Bạn <strong>đóng gói một lần, dùng mãi mãi.</strong></p>
+<div class="lesson-callout"><div class="lesson-callout-icon">📌</div><div class="lesson-callout-text"><strong>Định nghĩa đơn giản:</strong> Skill là file <code>.md</code> mà Claude đọc trước khi trả lời. Bên trong chứa context, quy trình từng bước, references và output format.</div></div>
+<h3>So sánh thực tế</h3>
+<ul>
+<li><strong>Không có Skill:</strong> Mỗi lần viết email cho khách hàng, bạn lại gõ "Hãy viết email chuyên nghiệp, thân thiện, ngắn gọn, đề cập đến..." rồi hy vọng Claude hiểu đúng ý.</li>
+<li><strong>Có Skill:</strong> Bạn upload file <code>email-khach-hang.md</code> — bên trong đã định nghĩa tone, cấu trúc, những gì cần và không cần đề cập. Lần nào dùng cũng ra đúng format đó.</li>
+</ul>
+<h3>Tại sao quan trọng?</h3>
+<p>Khoảng cách giữa người dùng AI bình thường và người có hệ thống AI không nằm ở việc viết prompt hay. Nó nằm ở việc ai <strong>không cần viết prompt nữa</strong> — vì đã đóng gói sẵn thành Skill.</p>`
+    },
+    {
+      title:'Cấu trúc một Skill file', done:true,
+      detail:`<h3>4 phần của mọi Skill file</h3>
+<p>Dù Skill để làm gì, cấu trúc luôn gồm 4 phần cốt lõi:</p>
+<h4>1. Mục tiêu (Goal)</h4>
+<p>Claude cần đạt được gì sau khi chạy Skill này? Viết ngắn gọn, cụ thể. Ví dụ: <em>"Tạo báo cáo phân tích đối thủ súc tích, dùng được ngay trong meeting."</em></p>
+<h4>2. Quy trình (Process)</h4>
+<p>Liệt kê từng bước Claude phải làm, theo đúng thứ tự. Càng cụ thể càng tốt. Thay vì "phân tích kỹ", hãy viết "phân tích theo 3 tiêu chí: giá, tính năng, UX".</p>
+<h4>3. References</h4>
+<p>Tài liệu nền Claude phải đọc trước khi làm — brand guidelines, template, danh sách sản phẩm, quy trình nội bộ... (Chi tiết ở Bước 3)</p>
+<h4>4. Output format</h4>
+<p>Kết quả trông như thế nào? Dùng ví dụ thực tế nếu có: "Kết quả gồm 3 phần: tóm tắt 1 đoạn, bảng so sánh, và phần hành động đề xuất."</p>
+<div class="lesson-callout tip"><div class="lesson-callout-icon"></div><div class="lesson-callout-text"><strong>Template để copy:</strong><br><code>---<br>name: tên-skill<br>description: Khi nào dùng Skill này<br>---<br><br>## Mục tiêu<br>## Quy trình<br>## References<br>## Output format</code></div></div>`
+    },
+    {
+      title:'Viết References đầu tiên', done:true,
+      detail:`<h3>References là gì?</h3>
+<p>References là <strong>tài liệu nền</strong> mà Claude phải đọc trước khi trả lời. Đây là thứ biến Skill từ "hướng dẫn chung" thành <strong>"chuyên gia của riêng bạn"</strong>.</p>
+<h3>Ví dụ References hay dùng</h3>
+<ul>
+<li><strong>Brand guidelines</strong> → Claude viết đúng giọng văn thương hiệu</li>
+<li><strong>Template báo cáo</strong> → Claude điền đúng format công ty</li>
+<li><strong>Danh sách sản phẩm + giá</strong> → Claude tư vấn chính xác</li>
+<li><strong>Quy trình nội bộ</strong> → Claude follow đúng từng bước</li>
+<li><strong>FAQs & objections</strong> → Claude trả lời như nhân viên kỳ cựu</li>
+</ul>
+<h3>Cách viết References hiệu quả</h3>
+<div class="lesson-callout warning"><div class="lesson-callout-icon">❌</div><div class="lesson-callout-text"><strong>Kém:</strong> "Đây là thông tin về công ty: ABC Corp thành lập 2010, có 200 nhân viên, chuyên về..."<br>→ Claude không biết dùng thông tin này để làm gì.</div></div>
+<div class="lesson-callout"><div class="lesson-callout-icon">✅</div><div class="lesson-callout-text"><strong>Tốt:</strong><br><code>[BRAND VOICE]</code><br>Giọng văn: Thân thiện, trực tiếp, không jargon.<br>Tránh: "Giải pháp toàn diện", "Hành trình".<br>Dùng: Câu ngắn dưới 20 từ, ví dụ cụ thể.<br><code>[SẢN PHẨM]</code><br>Gói Basic: 500k/tháng — dành cho cá nhân...<br>→ Claude biết chính xác phải dùng thông tin này ở đâu.</div></div>
+<p>Nguyên tắc: <strong>Cấu trúc bằng heading</strong> <code>[TÊN PHẦN]</code> để Claude dễ tìm đúng thông tin khi cần.</p>`
+    },
+    {
+      title:'Test và lặp lại', done:false, active:true,
+      detail:`<h3>Tại sao phải test?</h3>
+<p>Skill file đầu tiên bạn viết <strong>gần như chắc chắn chưa hoàn hảo</strong>. Không phải vì bạn viết kém — mà vì bạn chỉ biết Skill cần gì sau khi thấy output thật.</p>
+<h3>Quy trình test 3 bước</h3>
+<h4>Test 1 — Happy path</h4>
+<p>Dùng với input chuẩn nhất bạn hay gặp. Output có đúng format không? Có thiếu phần nào không? Tone có đúng không?</p>
+<h4>Test 2 — Edge case</h4>
+<p>Dùng với input bất thường: quá ngắn, quá dài, thiếu thông tin quan trọng. Skill xử lý gracefully không, hay output vô nghĩa?</p>
+<h4>Test 3 — User test</h4>
+<p>Nhờ người <strong>chưa biết gì</strong> về Skill của bạn dùng thử. Nếu họ bối rối ở bước nào → thêm instruction vào Skill.</p>
+<div class="lesson-callout"><div class="lesson-callout-icon">🔄</div><div class="lesson-callout-text"><strong>Vòng lặp cải thiện:</strong><br>Dùng Skill → Thấy output chưa đúng → Xác định nguyên nhân → Sửa đúng chỗ → Dùng lại<br><br>Sau 3–5 vòng lặp, Skill sẽ cho output gần như chuẩn 100%.</div></div>
+<h3>Ghi chú khi test</h3>
+<p>Mỗi lần sửa, ghi lại <em>tại sao</em> sửa. Ví dụ: <em>"v1.2 — thêm instruction về độ dài vì output trước quá dài"</em>. Sau này khi Skill cho kết quả lạ, bạn biết quay lại phiên bản nào.</p>`
+    },
+    {
+      title:'Tối ưu trigger conditions', done:false,
+      detail:`<h3>Trigger condition là gì?</h3>
+<p>Trigger condition là <strong>điều kiện để Skill tự kích hoạt</strong> mà không cần bạn gõ "dùng Skill XYZ". Claude tự nhận ra và áp dụng Skill phù hợp.</p>
+<p>Ví dụ: Khi bạn paste một bản tin tiếng Anh vào chat, Claude tự biết dùng Skill <code>translate-summarize</code> — không cần bạn nói gì.</p>
+<h3>3 loại trigger phổ biến</h3>
+<h4>Keyword trigger</h4>
+<p>Khi Claude thấy từ khóa nhất định → kích hoạt Skill tương ứng.<br>Ví dụ: "phân tích", "tóm tắt", "viết email", "so sánh"...</p>
+<h4>Format trigger</h4>
+<p>Khi input có định dạng nhất định → Skill tương ứng.<br>Ví dụ: URL → Skill đọc và tóm tắt web. Bảng số liệu → Skill phân tích data. Code → Skill code review.</p>
+<h4>Intent trigger</h4>
+<p>Claude nhận ra <em>mục đích</em> của câu hỏi → chọn Skill phù hợp.<br>Ví dụ: "Khách hàng đang phàn nàn về..." → Skill xử lý khiếu nại.</p>
+<div class="lesson-callout tip"><div class="lesson-callout-icon"></div><div class="lesson-callout-text"><strong>Thêm vào Skill file:</strong><br><code>## Trigger conditions</code><br>Tự động kích hoạt khi:<br>- Người dùng paste text tiếng Anh dài hơn 200 từ<br>- Người dùng dùng từ khóa: "phân tích", "tóm tắt"<br><br>Không kích hoạt khi:<br>- Câu hỏi ngắn (dưới 20 từ)</div></div>`
+    },
+    {
+      title:'Deploy vào workflow thật', done:false,
+      detail:`<h3>3 cách deploy phổ biến</h3>
+<h4>Cách 1 — Skill folder trên máy</h4>
+<p>Tạo thư mục <code>/my-skills/</code> chứa tất cả file <code>.md</code>. Mỗi khi cần, kéo file tương ứng vào chat Claude.</p>
+<p>✅ Đơn giản, không cần setup. ⚠️ Phải nhớ kéo file thủ công mỗi lần.</p>
+<h4>Cách 2 — Claude Projects (Khuyến nghị)</h4>
+<p>Upload Skill file vào <strong>Project Knowledge</strong> trong Claude. Mọi chat trong Project đó tự có Skill — không cần upload lại.</p>
+<p>✅ Tự động, nhất quán. ✅ Có thể có nhiều Skill cùng lúc. ✅ Dễ cập nhật.</p>
+<h4>Cách 3 — Kết hợp nhiều Skill</h4>
+<p>Skill có thể tham chiếu nhau. Ví dụ: Skill <code>weekly-report</code> gọi Skill <code>meeting-summary</code> + <code>action-items</code> + <code>email-format</code>.</p>
+<div class="lesson-callout"><div class="lesson-callout-icon">✅</div><div class="lesson-callout-text"><strong>Checklist trước khi deploy:</strong><br>
+☐ Đã test ít nhất 5 lần với input thật<br>
+☐ Output format nhất quán mỗi lần<br>
+☐ References cập nhật và chính xác<br>
+☐ Có ghi chú version (v1.0 — ngày tạo)<br>
+☐ Đã chia sẻ với ít nhất 1 người dùng thử</div></div>
+<h3>Bước tiếp theo</h3>
+<p>Tạo Skill đầu tiên cho <strong>một task bạn làm lặp lại nhiều nhất mỗi tuần</strong>. Đó là nơi bạn sẽ thấy giá trị rõ nhất.</p>`
+    }
+  ]
+},
+{id:2,icon:'⚡',iconBg:'rgba(240,192,64,0.1)',title:'Prompt Engineering Pro',desc:'Từ prompt "okay" lên prompt "OMG hiệu quả vãi". Kỹ thuật nâng cao: chain-of-thought, few-shot, system prompt architecture.',tags:['strategy','writing'],badges:['hot'],progress:0,free:false,duration:'1 giờ',level:'Trung cấp',steps:[{title:'Anatomy của một prompt tốt',done:false,detail:''},{title:'Few-shot & chain-of-thought',done:false,detail:''},{title:'System prompt design',done:false,detail:''},{title:'Xử lý edge cases',done:false,detail:''}]},
+{id:3,icon:'📊',iconBg:'rgba(167,139,250,0.12)',title:'Phân Tích Dữ Liệu với AI',desc:'Dùng Claude để đọc số liệu, tìm insight, và tự động viết báo cáo phân tích chuyên nghiệp.',tags:['analysis','coding'],badges:['new'],progress:0,free:true,duration:'90 phút',level:'Trung cấp',steps:[{title:'Upload và đọc data với Claude',done:false,detail:''},{title:'Viết Skill cho analysis workflow',done:false,detail:''},{title:'Tạo báo cáo tự động',done:false,detail:''},{title:'Dashboard từ spreadsheet',done:false,detail:''},{title:'Kết nối với Python/SQL',done:false,detail:''}]},
+{id:4,icon:'✍️',iconBg:'rgba(248,113,113,0.1)',title:'Content Writing System',desc:'Xây dựng hệ thống sản xuất nội dung nhất quán: blog, email, social media — với giọng văn riêng của thương hiệu.',tags:['writing'],badges:[],progress:20,free:false,duration:'60 phút',level:'Cơ bản',steps:[{title:'Định nghĩa Brand Voice',done:true,detail:''},{title:'Skill cho từng content type',done:false,detail:''},{title:'Editorial calendar tự động',done:false,detail:''},{title:'Review và cải thiện output',done:false,detail:''}]},
+{id:5,icon:'💻',iconBg:'rgba(74,222,128,0.1)',title:'AI Cơ Bản — Khởi Đầu',desc:'Nền tảng để hiểu AI hoạt động như thế nào, và tại sao "nói chuyện với AI" khác với "có hệ thống AI".',tags:['strategy'],badges:[],progress:100,free:true,duration:'30 phút',level:'Mới bắt đầu',steps:[{title:'AI là gì và làm được gì',done:true,detail:''},{title:'Sự khác biệt: prompt vs system',done:true,detail:''},{title:'Claude vs ChatGPT vs Gemini',done:true,detail:''},{title:'Use cases thực tế',done:true,detail:''},{title:'Giới hạn và điểm mù của AI',done:true,detail:''},{title:'Bước tiếp theo',done:true,detail:''}]},
+{id:6,icon:'🎯',iconBg:'rgba(251,191,36,0.1)',title:'AI Agents & Automation',desc:'Xây dựng agent tự chạy workflow nhiều bước mà không cần can thiệp thủ công — từ research đến report.',tags:['coding','strategy'],badges:['hot'],progress:0,free:false,locked:true,duration:'2 giờ',level:'Nâng cao',steps:[{title:'Agent architecture cơ bản',done:false,detail:''},{title:'Tool use và function calling',done:false,detail:''},{title:'Multi-step workflow',done:false,detail:''},{title:'Error handling & retry',done:false,detail:''},{title:'Deploy agent thật',done:false,detail:''}]}
+];
+
+const ICON_OPTS=['🧠','⚡','📊','✍️','💻','🎯','📚','🔬','🎨','🛠️','📱','🤖','💡','🔐','📈','🎤'];
+const ICON_BG_MAP={'🧠':'rgba(96,165,250,0.12)','⚡':'rgba(240,192,64,0.1)','📊':'rgba(167,139,250,0.12)','✍️':'rgba(248,113,113,0.1)','💻':'rgba(74,222,128,0.1)','🎯':'rgba(251,191,36,0.1)','📚':'rgba(96,165,250,0.1)','🔬':'rgba(74,222,128,0.08)','🎨':'rgba(248,113,113,0.08)','🛠️':'rgba(167,139,250,0.1)','📱':'rgba(96,165,250,0.08)','🤖':'rgba(240,192,64,0.08)','💡':'rgba(251,191,36,0.08)','🔐':'rgba(248,113,113,0.12)','📈':'rgba(74,222,128,0.12)','🎤':'rgba(248,113,113,0.1)'};
+
+// ═══ STATE ═══
+let skills=[], editingId=null, selectedBadges=[], adminUnlocked=false, nextId=100;
+let currentLessonId=null, currentStepIdx=0;
+const DATA_VERSION='4';
+
+// ═══ STORAGE ═══
+function loadSkills(){
+  try{
+    const ver=localStorage.getItem('ai_skills_version');
+    const saved=localStorage.getItem('ai_skills_data');
+    if(!saved||ver!==DATA_VERSION){
+      skills=JSON.parse(JSON.stringify(DEFAULT_SKILLS));
+      saveSkillsToStorage();
+    } else {
+      const parsed=JSON.parse(saved);
+      const defMap=Object.fromEntries(DEFAULT_SKILLS.map(s=>[s.id,s]));
+      // For default skills: keep user progress but update detail content from DEFAULT
+      skills=parsed.map(s=>{
+        if(defMap[s.id]){
+          return {...defMap[s.id], progress:s.progress,
+            steps:defMap[s.id].steps.map((ds,i)=>({
+              ...ds,
+              done:s.steps[i]?.done??ds.done,
+              active:s.steps[i]?.active??ds.active
+            }))};
+        }
+        return s; // user-created skills: preserve entirely including custom detail
+      });
+      DEFAULT_SKILLS.forEach(ds=>{if(!skills.find(s=>s.id===ds.id))skills.push({...ds});});
+      saveSkillsToStorage();
+    }
+    nextId=Math.max(...skills.map(s=>s.id),99)+1;
+  }catch(e){skills=JSON.parse(JSON.stringify(DEFAULT_SKILLS));}
+}
+function saveSkillsToStorage(){
+  try{localStorage.setItem('ai_skills_data',JSON.stringify(skills));localStorage.setItem('ai_skills_version',DATA_VERSION);}catch(e){}
+}
+function loadPw(){return localStorage.getItem('admin_pw')||'admin123';}
+function savePw(pw){localStorage.setItem('admin_pw',pw);}
+
+// ═══ RENDER CARDS ═══
+function renderBadge(b){const m={new:['badge-new','MỚI'],hot:['badge-hot','🔥 HOT'],free:['badge-free','MIỄN PHÍ']};if(!m[b])return '';const[c,l]=m[b];return`<span class="badge ${c}">${l}</span>`;}
+function renderCard(s){
+  const done=s.progress===100,isFree=s.free;
+  const extra=(isFree?'<span class="badge badge-free">MIỄN PHÍ</span>':'')+(done?'<span class="badge badge-done">✓ XONG</span>':'');
+  const hasContent=s.steps.some(st=>st.detail&&st.detail.trim());
+  const contentBadge=hasContent?'':'<span class="badge" style="background:rgba(248,113,113,.12);color:var(--red)">CHƯA CÓ NỘI DUNG</span>';
+  return`<div class="skill-card${s.locked?' locked':''}" data-tags="${s.tags.join(',')}" data-free="${isFree}"
+    onclick="${s.locked?'':('openModal('+s.id+')')}" onmousemove="cardGlow(event,this)">
+    <div class="card-header">
+      <div class="card-icon" style="background:${s.iconBg||'rgba(255,255,255,.05)'}">${s.icon}</div>
+      <div class="card-badges">${s.badges.map(renderBadge).join('')}${extra}${contentBadge}</div>
+    </div>
+    ${s.progress>0&&s.progress<100?`<div class="card-progress"><div class="card-progress-fill" style="width:${s.progress}%"></div></div>`:''}
+    ${done?`<div class="card-progress"><div class="card-progress-fill" style="width:100%;background:var(--green)"></div></div>`:''}
+    <div class="card-title">${s.title}</div>
+    <p class="card-desc">${s.desc}</p>
+    <div class="card-steps">${s.steps.slice(0,3).map(st=>`<div class="step-item${st.done?' done-step':''}"><div class="step-dot${st.done?' done':st.active?' active':''}"></div>${st.title}</div>`).join('')}
+    ${s.steps.length>3?`<div class="step-item"><div class="step-dot"></div>+${s.steps.length-3} bước nữa</div>`:''}</div>
+    <div class="card-footer">
+      <div class="card-meta"><span>⏱ ${s.duration||'—'}</span><span>📶 ${s.level||'—'}</span></div>
+      ${s.locked?'<span style="font-size:11px;color:var(--muted)">🔒 Khóa</span>':`<span class="card-cta">${done?'Xem lại':s.progress>0?'Tiếp tục':'Bắt đầu'} →</span>`}
+    </div>
+  </div>`;
+}
+
+function renderAll(){
+  document.getElementById('skillsGrid').innerHTML=skills.map(renderCard).join('');
+  document.getElementById('count').textContent=skills.length+' skills';
+  renderSidebar();
+  renderAdminList();
+}
+function renderSidebar(){
+  const done=skills.filter(s=>s.progress===100).length;
+  let html='';
+  const inProg=skills.filter(s=>s.progress>0&&s.progress<100);
+  const notStart=skills.filter(s=>s.progress===0&&!s.locked).slice(0,3);
+  const doneList=skills.filter(s=>s.progress===100);
+  if(inProg.length){html+=`<div class="sidebar-section-label">Đang học</div>`;inProg.forEach(s=>{html+=sidebarItem(s,`${s.steps.filter(x=>x.done).length}/${s.steps.length} bước`,s.progress+'%');});}
+  if(notStart.length){html+=`<div class="sidebar-section-label">Chưa bắt đầu</div>`;notStart.forEach(s=>{html+=sidebarItem(s,s.level,'0%');});}
+  if(doneList.length){html+=`<div class="sidebar-section-label">Hoàn thành</div>`;doneList.forEach(s=>{html+=sidebarItem(s,'Hoàn thành','done');});}
+  document.getElementById('sidebar-skills').innerHTML=html;
+  document.getElementById('sidebar-progress-text').textContent=`${done} / ${skills.length}`;
+  document.getElementById('sidebar-progress-bar').style.width=skills.length?Math.round(done/skills.length*100)+'%':'0%';
+}
+function sidebarItem(s,meta,badge){
+  const bdg=badge==='done'?`<span class="skill-nav-badge done">✓</span>`:`<span class="skill-nav-badge">${badge}</span>`;
+  return`<div class="skill-nav-item" onclick="openModal(${s.id})">
+    <div class="skill-nav-icon" style="background:${s.iconBg||'rgba(255,255,255,.05)'}">${s.icon}</div>
+    <div class="skill-nav-info"><div class="skill-nav-name">${s.title}</div><div class="skill-nav-meta">${meta}</div></div>${bdg}</div>`;
+}
+
+// ═══ SKILL OVERVIEW MODAL ═══
+function openModal(id){
+  const s=skills.find(x=>x.id===id);
+  if(!s||s.locked)return;
+  const doneC=s.steps.filter(x=>x.done).length;
+  const firstInc=s.steps.findIndex(st=>!st.done);
+  const ctaLabel=doneC===s.steps.length?'🔄 Xem lại toàn bộ':firstInc>0?`▶ Tiếp tục — Bước ${firstInc+1}`:' 🚀 Bắt đầu học';
+  const rows=s.steps.map((st,i)=>{
+    const cls=st.done?'done-row':(!st.done&&i===firstInc)?'active-row':'';
+    const dot=st.done?'s-done':(!st.done&&i===firstInc)?'s-active':'s-todo';
+    const hint=st.done?'Đã hoàn thành':(!st.done&&i===firstInc)?'Đang học':'Chưa bắt đầu';
+    return`<div class="modal-step-row ${cls}" onclick="closeModal();openLesson(${id},${i})">
+      <div class="modal-step-dot ${dot}"></div>
+      <div class="modal-step-name">${st.title}</div>
+      <div class="modal-step-hint">${hint} →</div>
+    </div>`;
+  }).join('');
+  document.getElementById('modalContent').innerHTML=`
+    <div class="modal-eyebrow">SKILL ${String(id).padStart(2,'0')}</div>
+    <h2 class="modal-title">${s.icon} ${s.title}</h2>
+    <p class="modal-desc">${s.desc}</p>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+      <div style="flex:1;height:4px;background:var(--surface2);border-radius:99px;overflow:hidden">
+        <div style="height:100%;background:linear-gradient(90deg,var(--gold),#e8a020);border-radius:99px;width:${s.steps.length?Math.round(doneC/s.steps.length*100):0}%"></div>
+      </div>
+      <span style="font-family:'Space Mono',monospace;font-size:10px;color:var(--muted)">${doneC}/${s.steps.length}</span>
+    </div>
+    <div class="modal-section-label">Chọn bước để học</div>
+    <div class="modal-steps-list">${rows}</div>
+    <div class="modal-actions">
+      <button class="btn btn-gold" style="flex:1" onclick="closeModal();openLesson(${id},${Math.max(0,firstInc)})">${ctaLabel}</button>
+      ${adminUnlocked?`<button class="btn btn-ghost" onclick="closeModal();openAdminForm(${id})" style="flex-shrink:0">✏️ Sửa</button>`:''}
+      <button class="btn btn-ghost" onclick="closeModal()" style="flex-shrink:0">Đóng</button>
+    </div>`;
+  document.getElementById('modalOverlay').classList.add('open');
+}
+function closeModal(){document.getElementById('modalOverlay').classList.remove('open');}
+
+// ═══ LESSON VIEW ═══
+function openLesson(skillId, stepIdx=0){
+  const s=skills.find(x=>x.id===skillId);
+  if(!s)return;
+  currentLessonId=skillId;
+  currentStepIdx=stepIdx;
+  document.getElementById('lessonOverlay').classList.add('open');
+  renderLesson();
+}
+function closeLesson(){
+  document.getElementById('lessonOverlay').classList.remove('open');
+  currentLessonId=null;
+}
+function renderLesson(){
+  const s=skills.find(x=>x.id===currentLessonId);
+  if(!s)return;
+  const st=s.steps[currentStepIdx];
+  const doneC=s.steps.filter(x=>x.done).length;
+  const pct=s.steps.length?Math.round(doneC/s.steps.length*100):0;
+  // topbar
+  document.getElementById('lessonTopTitle').textContent=s.title;
+  document.getElementById('lessonProgressFill').style.width=pct+'%';
+  document.getElementById('lessonProgressText').textContent=`${doneC}/${s.steps.length}`;
+  // steps panel
+  document.getElementById('lessonStepsList').innerHTML=s.steps.map((step,i)=>{
+    const cls=i===currentStepIdx?'active':step.done?'completed':'';
+    const numContent=step.done?'✓':(i+1);
+    return`<div class="lesson-step-item ${cls}" onclick="lessonGoTo(${i})">
+      <div class="lesson-step-num">${numContent}</div>
+      <div class="lesson-step-info">
+        <div class="lesson-step-name">${step.title}</div>
+        <div class="lesson-step-status">${step.done?'Hoàn thành':i===currentStepIdx?'Đang học':'Chưa bắt đầu'}</div>
+      </div>
+    </div>`;
+  }).join('');
+  // content
+  const panel=document.getElementById('lessonContentInner');
+  if(st.detail&&st.detail.trim()){
+    panel.innerHTML=`
+      <div class="lesson-content-eyebrow">Bước ${currentStepIdx+1} / ${s.steps.length}</div>
+      <div class="lesson-content-title">${st.title}</div>
+      <div class="lesson-content-body">${st.detail}</div>`;
+  } else {
+    panel.innerHTML=`
+      <div class="lesson-content-empty">
+        <div class="lesson-content-empty-icon">📝</div>
+        <div class="lesson-content-empty-title">Bước ${currentStepIdx+1}: ${st.title}</div>
+        <div class="lesson-content-empty-desc">Nội dung cho bước này chưa được thêm vào.<br>Vào Admin Panel để soạn nội dung chi tiết.</div>
+        ${adminUnlocked?`<button class="btn btn-gold" style="margin-top:18px" onclick="openLessonAdmin()">✏️ Thêm nội dung ngay</button>`:''}
+      </div>`;
+  }
+  document.getElementById('lessonContentPanel').scrollTop=0;
+  // nav bar
+  document.getElementById('lessonNavInfo').textContent=`Bước ${currentStepIdx+1}: ${st.title}`;
+  document.getElementById('lessonPrevBtn').disabled=currentStepIdx===0;
+  document.getElementById('lessonPrevBtn').style.opacity=currentStepIdx===0?'.4':'1';
+  const isLast=currentStepIdx===s.steps.length-1;
+  const nextBtn=document.getElementById('lessonNextBtn');
+  if(st.done){
+    nextBtn.textContent=isLast?'✓ Đã hoàn thành':'Bước tiếp →';
+    nextBtn.style.background=isLast?'var(--green)':'var(--gold)';
+  } else {
+    nextBtn.textContent=isLast?'✓ Đánh dấu hoàn thành':'Hoàn thành & Tiếp →';
+    nextBtn.style.background='var(--gold)';
+  }
+  nextBtn.style.color='#0a0a0a';
+  // admin edit button
+  document.getElementById('lessonAdminBtn').style.display=adminUnlocked?'flex':'none';
+}
+function lessonGoTo(idx){currentStepIdx=idx;renderLesson();}
+function lessonNav(dir){
+  const s=skills.find(x=>x.id===currentLessonId);
+  if(!s)return;
+  const newIdx=currentStepIdx+dir;
+  if(newIdx>=0&&newIdx<s.steps.length){currentStepIdx=newIdx;renderLesson();}
+}
+function lessonMarkAndNext(){
+  const s=skills.find(x=>x.id===currentLessonId);
+  if(!s)return;
+  const st=s.steps[currentStepIdx];
+  if(!st.done){
+    st.done=true; st.active=false;
+    const next=s.steps.findIndex(x=>!x.done);
+    if(next>=0)s.steps[next].active=true;
+    s.progress=Math.round(s.steps.filter(x=>x.done).length/s.steps.length*100);
+    saveSkillsToStorage(); renderAll();
+    showToast('success','✓',`Hoàn thành: ${st.title}`);
+  }
+  const isLast=currentStepIdx===s.steps.length-1;
+  if(!isLast){currentStepIdx++;renderLesson();}
+  else{renderLesson();}
+}
+function openLessonAdmin(){
+  if(!adminUnlocked)return;
+  const s=skills.find(x=>x.id===currentLessonId);
+  if(!s)return;
+  closeLesson();
+  openAdminForm(currentLessonId, currentStepIdx);
+}
+
+// ═══ FILTER & UTILS ═══
+function filterSkills(tag,btn){
+  document.querySelectorAll('.tag-pill').forEach(p=>p.classList.remove('active'));
+  btn.classList.add('active');
+  let shown=0;
+  document.querySelectorAll('.skill-card').forEach(card=>{
+    const tags=card.dataset.tags||'';
+    const free=card.dataset.free==='true';
+    const show=tag==='all'||tags.includes(tag)||(tag==='free'&&free);
+    card.style.display=show?'':'none';
+    if(show)shown++;
+  });
+  document.getElementById('count').textContent=shown+' skills';
+}
+function cardGlow(e,card){
+  const r=card.getBoundingClientRect();
+  card.style.setProperty('--mx',((e.clientX-r.left)/r.width*100).toFixed(1)+'%');
+  card.style.setProperty('--my',((e.clientY-r.top)/r.height*100).toFixed(1)+'%');
+}
+function showToast(type,icon,msg){
+  const t=document.getElementById('toast');
+  document.getElementById('toastIcon').textContent=icon;
+  document.getElementById('toastMsg').textContent=msg;
+  t.className=`toast ${type} show`;
+  clearTimeout(t._timer);
+  t._timer=setTimeout(()=>t.classList.remove('show'),3000);
+}
+
+// ═══ ADMIN AUTH ═══
+function switchTab(tab){
+  document.getElementById('tab-learn').classList.toggle('active',tab==='learn');
+  document.getElementById('tab-admin').classList.toggle('active',tab==='admin');
+  document.getElementById('panel-learn').classList.toggle('active',tab==='learn');
+  document.getElementById('panel-admin').classList.toggle('active',tab==='admin');
+}
+function checkAdmin(){
+  if(document.getElementById('adminPwInput').value===loadPw()){
+    adminUnlocked=true;
+    document.getElementById('adminLockScreen').style.display='none';
+    document.getElementById('adminContent').style.display='block';
+    renderAdminList(); renderAll();
+    showToast('success','✓','Đăng nhập thành công!');
+  } else {
+    const inp=document.getElementById('adminPwInput');
+    inp.classList.add('error'); inp.value='';
+    setTimeout(()=>inp.classList.remove('error'),600);
+  }
+}
+function adminLogout(){
+  adminUnlocked=false;
+  document.getElementById('adminLockScreen').style.display='flex';
+  document.getElementById('adminContent').style.display='none';
+  document.getElementById('adminPwInput').value='';
+  switchTab('learn'); renderAll();
+}
+function changePw(){
+  const v=document.getElementById('newPwInput').value.trim();
+  if(v.length<4){showToast('error','✕','Ít nhất 4 ký tự');return;}
+  savePw(v); document.getElementById('newPwInput').value='';
+  showToast('success','✓','Đã đổi mật khẩu!');
+}
+function resetToDefault(){
+  try{
+    const saved=localStorage.getItem('ai_skills_data');
+    const userSkills=saved?JSON.parse(saved).filter(s=>s.id>=100):[];
+    localStorage.removeItem('ai_skills_version'); localStorage.removeItem('ai_skills_data');
+    loadSkills();
+    userSkills.forEach(us=>{if(!skills.find(s=>s.id===us.id))skills.push(us);});
+    saveSkillsToStorage(); renderAll();
+    showToast('success','✓','Đã tải lại nội dung gốc!');
+  }catch(e){showToast('error','✕','Có lỗi xảy ra');}
+}
+function renderAdminList(){
+  if(!adminUnlocked)return;
+  document.getElementById('adminSkillList').innerHTML=skills.map(s=>{
+    const dc=s.steps.filter(st=>st.done).length;
+    const pct=s.steps.length?Math.round(dc/s.steps.length*100):0;
+    const hasContent=s.steps.some(st=>st.detail&&st.detail.trim());
+    const sc=pct===100?'var(--green)':pct>0?'var(--gold)':'var(--muted)';
+    return`<div class="admin-skill-row">
+      <span class="admin-skill-row-icon">${s.icon}</span>
+      <div style="flex:1;min-width:0">
+        <div class="admin-skill-row-name">${s.title}</div>
+        <div style="display:flex;align-items:center;gap:5px;margin-top:3px">
+          <div style="flex:1;height:2px;background:var(--surface2);border-radius:99px;overflow:hidden">
+            <div style="height:100%;background:${sc};width:${pct}%;border-radius:99px"></div>
+          </div>
+          <span style="font-family:'Space Mono',monospace;font-size:9px;color:${hasContent?'var(--green)':'var(--red)'}">${hasContent?'✓ nội dung':'⚠ trống'}</span>
+        </div>
+      </div>
+      <div class="admin-skill-row-actions">
+        <button class="admin-icon-btn" onclick="openLesson(${s.id},0);switchTab('learn')" title="Xem trước" style="font-size:12px">👁</button>
+        <button class="admin-icon-btn" onclick="openAdminForm(${s.id})" title="Sửa">✏️</button>
+        <button class="admin-icon-btn delete" onclick="deleteSkill(${s.id})" title="Xóa">🗑</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ═══ ADMIN FORM ═══
+function openAdminForm(id=null, focusStep=null){
+  if(!adminUnlocked){switchTab('admin');return;}
+  editingId=id; selectedBadges=[];
+  document.getElementById('iconPicker').innerHTML=ICON_OPTS.map(ic=>`<div class="icon-opt" id="iconOpt_${ic}" onclick="selectIcon('${ic}')">${ic}</div>`).join('');
+  document.getElementById('stepsEditor').innerHTML='';
+  if(id!==null){
+    const s=skills.find(x=>x.id===id);
+    if(!s)return;
+    document.getElementById('formMode').textContent='CHỈNH SỬA';
+    document.getElementById('formTitle').textContent=s.title;
+    document.getElementById('fTitle').value=s.title;
+    document.getElementById('fDesc').value=s.desc;
+    document.getElementById('fDuration').value=s.duration||'';
+    document.getElementById('fLevel').value=s.level||'Cơ bản';
+    document.getElementById('fFree').checked=!!s.free;
+    document.getElementById('customIcon').value=s.icon;
+    selectIcon(s.icon);
+    ['writing','analysis','coding','strategy'].forEach(t=>{document.getElementById('tag-'+t).checked=s.tags.includes(t);});
+    selectedBadges=[...(s.badges||[])];
+    selectedBadges.forEach(b=>{const el=document.getElementById('badge-'+b);if(el)el.className='badge-toggle active-'+b;});
+    s.steps.forEach((st,i)=>addStep(st.title,st.detail||'',i===focusStep));
+  } else {
+    document.getElementById('formMode').textContent='THÊM MỚI';
+    document.getElementById('formTitle').textContent='Bài học mới';
+    ['fTitle','fDesc','fDuration'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('fLevel').value='Cơ bản';
+    document.getElementById('fFree').checked=false;
+    document.getElementById('customIcon').value='🎓';
+    document.getElementById('badge-new').className='badge-toggle';
+    document.getElementById('badge-hot').className='badge-toggle';
+    ['writing','analysis','coding','strategy'].forEach(t=>{document.getElementById('tag-'+t).checked=false;});
+    addStep('','',false); addStep('','',false); addStep('','',false);
+  }
+  document.getElementById('adminModalOverlay').classList.add('open');
+  if(focusStep!==null){
+    setTimeout(()=>{
+      const cards=document.querySelectorAll('.step-editor-card');
+      if(cards[focusStep]){cards[focusStep].scrollIntoView({behavior:'smooth',block:'center'});
+        const ta=cards[focusStep].querySelector('.step-editor-detail');if(ta)ta.focus();}
+    },200);
+  }
+}
+function closeAdminForm(){document.getElementById('adminModalOverlay').classList.remove('open');editingId=null;}
+function selectIcon(ic){
+  document.querySelectorAll('.icon-opt').forEach(el=>el.classList.remove('selected'));
+  const el=document.getElementById('iconOpt_'+ic);
+  if(el)el.classList.add('selected');
+  document.getElementById('customIcon').value=ic;
+}
+function toggleBadge(b){
+  const idx=selectedBadges.indexOf(b);
+  const btn=document.getElementById('badge-'+b);
+  if(idx>-1){selectedBadges.splice(idx,1);btn.className='badge-toggle';}
+  else{selectedBadges.push(b);btn.className='badge-toggle active-'+b;}
+}
+
+let stepCount=0;
+function addStep(titleVal='',detailVal='',autoFocus=false){
+  const editor=document.getElementById('stepsEditor');
+  const num=editor.children.length+1;
+  const card=document.createElement('div');
+  card.className='step-editor-card';
+  card.innerHTML=`
+    <div class="step-editor-header">
+      <span class="step-editor-num">${num}.</span>
+      <input type="text" class="step-editor-title-input" placeholder="Tên bước học..." value="${titleVal.replace(/"/g,'&quot;')}">
+      <button type="button" class="step-editor-remove" onclick="this.closest('.step-editor-card').remove();reindexSteps()" title="Xóa">✕</button>
+    </div>
+    <div class="step-editor-body">
+      <textarea class="step-editor-detail" placeholder="Nội dung chi tiết cho bước này... (hỗ trợ HTML: <h3>, <p>, <ul>, <strong>, <code>)">${detailVal}</textarea>
+    </div>`;
+  editor.appendChild(card);
+  // Auto-resize textarea
+  const ta=card.querySelector('.step-editor-detail');
+  ta.addEventListener('input',()=>{ta.style.height='auto';ta.style.height=ta.scrollHeight+'px';});
+  if(detailVal){ta.style.height='auto';ta.style.height=ta.scrollHeight+'px';}
+  if(autoFocus)setTimeout(()=>{ta.focus();ta.style.height='auto';ta.style.height=ta.scrollHeight+'px';},50);
+}
+function reindexSteps(){
+  document.querySelectorAll('.step-editor-card').forEach((c,i)=>{
+    const num=c.querySelector('.step-editor-num');
+    if(num)num.textContent=(i+1)+'.';
+  });
+}
+
+function saveSkill(){
+  const title=document.getElementById('fTitle').value.trim();
+  const desc=document.getElementById('fDesc').value.trim();
+  const icon=document.getElementById('customIcon').value.trim()||'🎓';
+  const duration=document.getElementById('fDuration').value.trim();
+  const level=document.getElementById('fLevel').value;
+  const isFree=document.getElementById('fFree').checked;
+  if(!title){showToast('error','✕','Vui lòng nhập tên bài học');return;}
+  if(!desc){showToast('error','✕','Vui lòng nhập mô tả');return;}
+  const tags=['writing','analysis','coding','strategy'].filter(t=>document.getElementById('tag-'+t).checked);
+  const stepCards=document.querySelectorAll('.step-editor-card');
+  const steps=Array.from(stepCards).map(c=>({
+    name:(c.querySelector('.step-editor-title-input')?.value||'').trim(),
+    detail:(c.querySelector('.step-editor-detail')?.value||'').trim()
+  })).filter(s=>s.name);
+  if(steps.length<1){showToast('error','✕','Cần ít nhất 1 bước');return;}
+  const iconBg=ICON_BG_MAP[icon]||'rgba(255,255,255,.06)';
+  if(editingId!==null){
+    const idx=skills.findIndex(s=>s.id===editingId);
+    if(idx>-1){
+      skills[idx]={...skills[idx],title,desc,icon,iconBg,duration,level,free:isFree,tags,badges:[...selectedBadges],
+        steps:steps.map((s,i)=>({title:s.name,detail:s.detail,done:skills[idx].steps[i]?.done||false,active:skills[idx].steps[i]?.active||false}))};
+    }
+    showToast('success','✓','Đã cập nhật bài học!');
+  } else {
+    skills.push({id:nextId++,title,desc,icon,iconBg,duration,level,free:isFree,tags,badges:[...selectedBadges],progress:0,
+      steps:steps.map(s=>({title:s.name,detail:s.detail,done:false,active:false}))});
+    showToast('success','✓','Đã thêm bài học mới!');
+  }
+  saveSkillsToStorage(); closeAdminForm(); renderAll();
+}
+
+// ═══ DELETE ═══
+function deleteSkill(id){
+  const s=skills.find(x=>x.id===id);if(!s)return;
+  document.getElementById('confirmDesc').textContent=`Xóa "${s.title}"? Thao tác này không thể hoàn tác.`;
+  document.getElementById('confirmYes').onclick=()=>{
+    skills=skills.filter(x=>x.id!==id);
+    saveSkillsToStorage(); renderAll(); closeConfirm();
+    showToast('success','✓','Đã xóa bài học');
+  };
+  document.getElementById('confirmOverlay').classList.add('open');
+}
+function closeConfirm(){document.getElementById('confirmOverlay').classList.remove('open');}
+
+// ═══ IMPORT ═══
+function openImport(){document.getElementById('importOverlay').classList.add('open');}
+function closeImport(){document.getElementById('importOverlay').classList.remove('open');}
+function importSkill(){
+  const raw=document.getElementById('importText').value.trim();
+  if(!raw){showToast('error','✕','Vui lòng paste JSON vào');return;}
+  try{
+    let data=JSON.parse(raw);
+    if(!Array.isArray(data))data=[data];
+    let added=0;
+    data.forEach(d=>{
+      if(!d.title||!d.steps)return;
+      const icon=d.icon||'📚';
+      skills.push({
+        id:nextId++,icon,iconBg:ICON_BG_MAP[icon]||'rgba(255,255,255,.06)',
+        title:d.title,desc:d.desc||'',tags:d.tags||[],badges:d.badges||[],
+        progress:0,free:!!d.free,duration:d.duration||'',level:d.level||'Cơ bản',
+        steps:(d.steps||[]).map(s=>({title:typeof s==='string'?s:s.title,detail:s.detail||'',done:false,active:false}))
+      });
+      added++;
+    });
+    saveSkillsToStorage(); renderAll(); closeImport();
+    document.getElementById('importText').value='';
+    showToast('success','✓',`Đã import ${added} bài học!`);
+  }catch(e){showToast('error','✕','JSON không hợp lệ. Kiểm tra lại định dạng.');}
+}
+
+// ═══ KEYBOARD ═══
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){closeModal();closeAdminForm();closeConfirm();closeImport();closeLesson();}
+});
+
+// ═══ INIT ═══
+loadSkills(); renderAll();
+</script>
+</body>
+</html>
